@@ -1,9 +1,11 @@
 use rand::Rng;
+use std::io::Write;
 
 use std::collections::HashMap;
 use std::{ thread, time };
 
 fn main() {
+  print!("\x1B[?25l");
   let grid_size: i16 = 90;
   let mut grid = generate_grid(grid_size);
   draw_grid(grid_size, &grid);
@@ -27,7 +29,7 @@ fn main() {
         next_grid.insert(*key, 1);
         for coord in &near_cell(*x, *y) {
           if !next_grid.contains_key(coord) {
-            next_grid.contains_key(&coord.clone());
+            next_grid.insert(coord.clone(), 0);
           }
         }
       }
@@ -44,13 +46,14 @@ fn main() {
 
     grid = next_grid;
     generation += 1;
-    std::process::Command::new("clear").status().unwrap();
+    print!("\x1B[2J\x1B[H");
     draw_grid(grid_size, &grid);
+    std::io::stdout().flush().unwrap();
     let total_pop: i16 = grid.values().sum();
     println!("Gen: {generation}\nTotal pop: {total_pop}");
     thread::sleep(
          time::Duration::from_millis(100)
-       )
+       );
   }
 }
 
@@ -91,17 +94,18 @@ fn near_cell(x: i16, y: i16) -> Vec<(i16, i16)> {
   coords
 }
 fn draw_grid(grid_size: i16, grid: &HashMap<(i16, i16), i16>) {
-  let mut points: Vec<String> = vec![];
+  let mut frame = String::with_capacity((grid_size * (grid_size + 1)) as usize);
   for y in 0..grid_size {
     for x in 0..grid_size {
       let key = (x, y);
-      if !grid.contains_key(&key) || grid[&key] == 0 {
-        points.push(" ".to_string());
+      if grid.get(&key).copied().unwrap_or(0) == 1 {
+        frame.push('█');
       } else {
-        points.push("█".to_string());
+        frame.push(' ');
       }
     }
+    frame.push('\n');
   }
-  let line = points.join("");
-  println!("{line}");
+  print!("\x1B[2J\x1B[H{frame}");
+  std::io::stdout().flush().unwrap();
 }
