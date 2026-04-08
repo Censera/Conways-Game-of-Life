@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use std::{ thread, time };
 
 fn main() {
-  print!("\x1B[?25l");
   let grid_size: i16 = 90;
   let mut grid = generate_grid(grid_size);
   draw_grid(grid_size, &grid);
