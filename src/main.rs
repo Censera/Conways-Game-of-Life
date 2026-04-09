@@ -1,16 +1,22 @@
 use rand::Rng;
 use std::io::Write;
-
 use std::collections::HashMap;
 use std::{ thread, time };
+use terminal_size::{terminal_size, Width, Height};
 
 fn main() {
-  let grid_size: i16 = 90;
-  let mut grid = generate_grid(grid_size);
-  draw_grid(grid_size, &grid);
+  print!("\x1B[40m");
+  let ( mut w, mut h) = terminal_size()
+    .map(|(Width(w), Height(h))| (w as i16, h as i16 - 2))
+    .unwrap_or((45, 43));
+  let mut grid = generate_grid(w, h);
+  draw_grid(&grid, w, h);
 
   let mut generation = 0;
   loop {
+    (w, h) = terminal_size()
+    .map(|(Width(w), Height(h))| (w as i16, h as i16 - 2))
+    .unwrap_or((45, 43));
     let mut next_grid: HashMap<(i16, i16), i16> = Default::default();
     let keys: Vec<&(i16, i16)> = grid.keys().collect();
 
@@ -45,24 +51,24 @@ fn main() {
 
     grid = next_grid;
     generation += 1;
-    print!("\x1B[2J\x1B[H");
-    draw_grid(grid_size, &grid);
+    draw_grid(&grid, w, h);
     std::io::stdout().flush().unwrap();
     let total_pop: i16 = grid.values().sum();
     println!("Gen: {generation}\nTotal pop: {total_pop}");
     thread::sleep(
-         time::Duration::from_millis(100)
+         time::Duration::from_millis(90)
        );
   }
+  print!("\x1B[0m");
 }
 
-fn generate_grid(grid_size: i16) -> HashMap<(i16, i16), i16> {
+fn generate_grid(w: i16, h: i16) -> HashMap<(i16, i16), i16> {
   let mut grid: HashMap<(i16, i16), i16> = Default::default();
 
   let mut coords: (i16, i16) = (0, 0);
   for _ in 0..50 {
-    coords.0 = rand::thread_rng().gen_range(grid_size/ 4..grid_size - (grid_size / 4));
-    coords.1 = rand::thread_rng().gen_range(grid_size/ 4..grid_size - (grid_size / 4));
+    coords.0 = rand::thread_rng().gen_range(w/ 4..w - (w / 4));
+    coords.1 = rand::thread_rng().gen_range(h/ 4..h - (h / 4));
 
     grid.insert((coords.0, coords.1),     1);
     grid.insert((coords.0 + 1, coords.1), 1);
@@ -92,10 +98,10 @@ fn near_cell(x: i16, y: i16) -> Vec<(i16, i16)> {
   coords.push((x - 1, y + 1));
   coords
 }
-fn draw_grid(grid_size: i16, grid: &HashMap<(i16, i16), i16>) {
-  let mut frame = String::with_capacity((grid_size * (grid_size + 1)) as usize);
-  for y in 0..grid_size {
-    for x in 0..grid_size {
+fn draw_grid(grid: &HashMap<(i16, i16), i16>, w: i16, h: i16) {
+  let mut frame = String::with_capacity((h * (h + 1)) as usize);
+  for y in 0..h {
+    for x in 0..w {
       let key = (x, y);
       if grid.get(&key).copied().unwrap_or(0) == 1 {
         frame.push('█');
