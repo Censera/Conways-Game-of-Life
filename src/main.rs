@@ -5,7 +5,7 @@ use std::{ thread, time };
 use terminal_size::{terminal_size, Width, Height};
 
 fn main() {
-  print!("\x1B[40m");
+  //print!("\x1B[40m");
   let ( mut w, mut h) = terminal_size()
     .map(|(Width(w), Height(h))| (w as i16, h as i16 - 2))
     .unwrap_or((45, 43));
@@ -59,7 +59,6 @@ fn main() {
          time::Duration::from_millis(90)
        );
   }
-  print!("\x1B[0m");
 }
 
 fn generate_grid(w: i16, h: i16) -> HashMap<(i16, i16), i16> {
@@ -111,6 +110,6 @@ fn draw_grid(grid: &HashMap<(i16, i16), i16>, w: i16, h: i16) {
     }
     frame.push('\n');
   }
-  print!("\x1B[2J\x1B[H{frame}");
+  print!("{frame}");
   std::io::stdout().flush().unwrap();
 }
